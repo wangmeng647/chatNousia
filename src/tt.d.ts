@@ -1,0 +1,52 @@
+// declare namespace myLib {
+//     //~ We can write 'myLib.timeout = 50;'
+//     let timeout: 2;
+//     //~ We can access 'myLib.version', but not change it
+//     const version: string;
+//     //~ There's some class we can create via 'let c = new myLib.Cat(42)'
+//     //~ Or reference e.g. 'function f(c: myLib.Cat) { ... }
+//     class Cat {
+//       constructor(n: number);
+//       //~ We can read 'c.age' from a 'Cat' instance
+//       readonly age: number;
+//       //~ We can invoke 'c.purr()' from a 'Cat' instance
+//       purr(): void;
+//     }
+//     //~ We can declare a variable as
+//     //~   'var s: myLib.CatSettings = { weight: 5, name: "Maru" };'
+//     interface CatSettings {
+//       weight: number;
+//       name: string;
+//       tailLength?: number;
+//     }
+//     //~ We can write 'const v: myLib.VetID = 42;'
+//     //~  or 'const v: myLib.VetID = "bob";'
+//     type VetID = string | number;
+//     //~ We can invoke 'myLib.checkCat(c)' or 'myLib.checkCat(c, v);'
+//     function checkCat(c: Cat, s?: VetID);
+//   }
+
+// export declare const thing: number;
+// export function add(arg: number): number;
+// declare const thing: number;
+// export const thing: number
+// declare namespace myLib {
+//   function makeGreeting(s: string): string;
+//   let numberOfGreetings: number;
+// }
+// declare namespace Chat{
+//   interface chat{
+//     id: number
+//   }
+// };
+
+// export function add(): number
+// export const a: number
+export declare namespace Chat {
+  export interface chat {
+    id: number
+  }
+}
+function qq() {
+  return 2
+}
