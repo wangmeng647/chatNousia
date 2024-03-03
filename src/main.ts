@@ -24,18 +24,6 @@ async function bootstrap() {
   app.use(pinia)
   setupScrollbarStyle()
   app.use(router)
-
-  // setupStore(app)
-
-  // setupI18n(app)
-
-  // await setupRouter(app)
-
   app.mount('#app')
 }
 bootstrap()
-// const t = thing
-// console.log(t)
-// type TypeOfThing = typeof thing;
-// import getArrayMetadata from "./tt"; // <- no extension
-console.log(121)

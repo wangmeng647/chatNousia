@@ -1,17 +1,18 @@
 <script setup lang='ts'>
 import { NButton, NInput, useMessage } from 'naive-ui'
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import axios from 'axios'
 import { Icon } from '@iconify/vue'
 import { onBeforeRouteLeave } from 'vue-router'
 import MessageComponent from './components/index.vue'
-import { useChatStore } from '@/store/chat/chat'
+import { useImageStore } from '@/store/image/image'
 import { SvgIcon } from '@/components'
 
 const naiveMessage = useMessage()
 const scrollRef = ref<ScrollElement>()
 let controller = new AbortController()
-const useStore = useChatStore()
-const placeholder = 'Shift + Enter = 换行'
+const useStore = useImageStore()
+const placeholder = '请输入英文  Shift + Enter = 换行'
 const prompt = ref('')
 const loading = ref(false)
 type ScrollElement = HTMLDivElement | null
@@ -26,106 +27,62 @@ async function scrollToBottom() {
     scrollRef.value.scrollTop = scrollRef.value.scrollHeight
 }
 
-function userMessageUpdate() {
-  useStore.chatUpdate({
+function promptMessageUpdate() {
+  useStore.promptUpdate({
     text: prompt.value,
-    isUser: true,
     dateTime: new Date().toLocaleString(),
+    imageUrl: undefined,
   })
 }
 
-function aiMessageUpdate(aiResponse: string, isSubsquent: boolean, isDone = false) {
-  if (isSubsquent) {
-    useStore.chatUpdateSubsequent(aiResponse, isDone)
-  }
-  else {
-    useStore.chatUpdate({
-      text: aiResponse,
-      isUser: false,
-      dateTime: new Date().toLocaleString(),
-    })
-  }
+function imageUpdate(imageUrl: string) {
+  useStore.imageUpdate(imageUrl)
 }
 
 function handleSubmit() {
   conversation()
 }
 
-function fetchApi(message: string) {
-  // const data = {
-  //   'prompt': message,
-  //   "max_length": 1000,
-  //   "top_p": 10,
-  //   "temperature": 0.2,
-  //   "options": {},
-  //   "memory": 1,
-  //   "is_knowledge": false
-  // }`
-  const data = {
-    prompt: message,
-  }
-  const getData = async () => {
-    try {
-      controller = new AbortController()
-      loading.value = true
-      const urlchat = import.meta.env.VITE_URL_CHAT
-      const response = await fetch(urlchat, {
-        method: 'POST',
-        signal: controller.signal,
-        body: JSON.stringify(data),
-        headers: {
-          'Accept': 'text/event-stream',
-          'Content-type': 'application/json',
-        },
-      })
-      if (response.status !== 200) {
-        naiveMessage.info('服务器错误，请稍后再试')
-        loading.value = false
-        scrollToBottom()
-        return
-      }
-      const reader = response.body!.getReader()
-      const decoder = new TextDecoder()
-      let isSubsquent = false
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) {
-          loading.value = false
-          aiMessageUpdate('', isSubsquent, done)
-          break
-        }
-        const decodedChunk = decoder.decode(value, { stream: true })
-        aiMessageUpdate(decodedChunk, isSubsquent)
-        if (!isSubsquent)
-          scrollToBottom()
-
-        isSubsquent = true
-      }
-      scrollToBottom()
-    }
-    catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
-        aiMessageUpdate('', true, true)
-      }
-      else {
-        naiveMessage.info('工程师正在赶来的路上，请稍后再试')
-        loading.value = false
-        scrollToBottom()
-      }
-      loading.value = false
-    }
-  }
-  getData()
-}
-
 async function conversation() {
   const message = prompt.value
   if (!message || message.trim() === '')
     return
-  userMessageUpdate()
-  prompt.value = ''
-  scrollToBottom()
-  fetchApi(message)
+  try {
+    promptMessageUpdate()
+  }
+  finally {
+    prompt.value = ''
+    scrollToBottom()
+    getImageByPost(message)
+  }
+}
+
+function getImageByPost(prompt: string) {
+  controller = new AbortController()
+  loading.value = true
+  const data = {
+    prompt,
+  }
+  const head = 'data:image/png;base64,'
+  const url = import.meta.env.VITE_URL_IMAGE
+  axios
+    .post(url, data, {
+      responseType: 'arraybuffer',
+      signal: controller.signal,
+    })
+    .then((response) => {
+      const enc = new TextDecoder('utf-8')
+      const imageUrl = head + enc.decode(response.data).slice(1, -1)
+      imageUpdate(imageUrl)
+      scrollToBottom()
+    })
+    .catch((error) => {
+      if (error.name !== 'CanceledError')
+        naiveMessage.info('工程师正在赶来的路上，请稍后再试')
+    })
+    .finally(() => {
+      loading.value = false
+    })
 }
 
 function handleEnter(event: KeyboardEvent) {
@@ -149,6 +106,7 @@ function handleDelete(index: number) {
   if (loading.value)
     return
   useStore.chatDelete(index)
+  console.log('index:', index)
 }
 
 onMounted(() => {
@@ -173,18 +131,18 @@ onBeforeRouteLeave(() => {
     <main class="flex-1 overflow-hidden">
       <div ref="scrollRef" class="h-full overflow-hidden overflow-y-auto">
         <div class="bg-[#101014] w-full max-w-full m-auto">
-          <template v-if="!useStore.chatData.length">
+          <template v-if="!useStore.imageData.length">
             <div class="flex justify-center mt-5 text-center text-[#f3f6f4] text-3xl">
-              <span>Chat</span>
+              <span>Image</span>
             </div>
           </template>
           <template v-else>
             <div>
               <MessageComponent
-                v-for="(item, index) of useStore.chatData" :key="index"
+                v-for="(item, index) of useStore.imageData" :key="index"
                 :text="item.text"
                 :date-time="item.dateTime"
-                :is-user="item.isUser"
+                :image-url="item.imageUrl"
                 @delete="handleDelete(index)"
               />
             </div>
@@ -196,7 +154,7 @@ onBeforeRouteLeave(() => {
     <footer class="p4">
       <div v-if="loading" class="sticky bottom-0 flex justify-center mb-2">
         <NButton type="warning" round @click="handleStopResponse">
-          <Icon icon="ci:stop-sign" width="19" />停止回复
+          <Icon icon="ci:stop-sign" width="19" />生成中,约需30秒,点击取消生成
         </NButton>
       </div>
       <div class="w-full max-w-screen-xl m-auto">
@@ -205,7 +163,7 @@ onBeforeRouteLeave(() => {
             v-model:value="prompt"
             type="textarea"
             :placeholder="placeholder"
-            :autosize="{ minRows: 1, maxRows: 5 }"
+            :autosize="{ minRows: 1, maxRows: 2 }"
             @keypress="handleEnter"
           />
           <NButton

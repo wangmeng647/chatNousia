@@ -7,7 +7,7 @@ import TextComponent from './text.vue'
 interface Props {
   text: string
   dateTime: string
-  isUser: boolean
+  imageUrl: string | undefined
 }
 
 interface Emit {
@@ -17,7 +17,6 @@ interface Emit {
 const props = defineProps<Props>()
 const emit = defineEmits<Emit>()
 
-const textRef = ref()
 const options = [
   {
     label: '复制',
@@ -65,27 +64,25 @@ function copyText() {
 </script>
 
 <template>
-  <div class="flex w-full mb-3 mt-3 overflow-hidden" :class="[{ 'flex-row-reverse': isUser }]">
+  <div class="flex w-full mb-3 mt-3 overflow-hidden">
     <div
-      class="flex intems-center justify-center flex-shrink-0 h-8 overflow-hidden rounded-full basis-8"
-      :class="[isUser ? 'mr-4 ml-1' : 'ml-4 mr-1']"
+      class="flex intems-center justify-center flex-shrink-0 h-8 overflow-hidden rounded-full basis-8 ml-4 mr-1"
     >
-      <AvatarComponent :is-user="isUser" />
+      <AvatarComponent />
     </div>
-    <div class="overflow-hidden text-md" :class="[isUser ? 'items-end' : 'items-start']">
-      <p class="text-sm text-[#f3f6f4]" :class="[isUser ? 'text-right' : 'text-left']">
+    <div class="overflow-hidden text-md items-start">
+      <p class="text-sm text-[#f3f6f4] text-left">
         {{ dateTime }}
       </p>
-      <div
-        class="flex items-end gap-1 mt-2"
-        :class="[isUser ? 'flex-row-reverse' : 'flex-row']"
-      >
+      <div class="flex items-end gap-1 mt-2 flex-row">
         <TextComponent
-          ref="textRef"
           :text="text"
-          :is-user="isUser"
           @contextmenu="handleContextMenu"
         />
+      </div>
+      <div v-if="imageUrl !== undefined">
+        <img width="256" height="256" alt="服务器错误" :src="imageUrl">
+        <!-- <img width="256" height="256" alt="clik 'getImage' to get"  src="./test_turbo.png"/> -->
       </div>
       <NDropdown
         placement="bottom-start"

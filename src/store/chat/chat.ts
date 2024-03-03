@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { getLocalState, setLocalState } from './helper'
+import { getLocalState } from './helper'
 
 interface ChatMessage {
   text?: string
@@ -30,7 +30,7 @@ export const useChatStore = defineStore('chat-store', {
     },
 
     recordeState() {
-      setLocalState(this.$state)
+      // setLocalState(this.$state)
     },
   },
 })
