@@ -200,12 +200,12 @@ onBeforeRouteLeave(() => {
         </NButton>
       </div>
       <div class="w-full max-w-screen-xl m-auto">
-        <div class="flex items-center justify-between space-x-2 mb-4">
+        <div class="flex items-end justify-between space-x-2 mb-4">
           <NInput
             v-model:value="prompt"
             type="textarea"
             :placeholder="placeholder"
-            :autosize="{ minRows: 1, maxRows: 5 }"
+            :autosize="{ minRows: 1, maxRows: 12 }"
             @keypress="handleEnter"
           />
           <NButton
